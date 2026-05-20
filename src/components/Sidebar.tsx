@@ -56,7 +56,7 @@ export default function Sidebar({
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-500/10">
               <img 
-                src="/src/assets/images/vayu_logo_1779257820535.png" 
+                src="/logo.png" 
                 alt="Vayu Logo" 
                 className="w-full h-full object-cover"
                 onError={(e) => {

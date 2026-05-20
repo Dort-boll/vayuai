@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
-import { ArrowUp, User, Bot, Loader2, Search, Zap } from 'lucide-react';
+import { ArrowUp, User, Bot, Loader2, Search, Zap, Menu } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { Message } from '@/src/types';
 
@@ -56,7 +56,7 @@ export default function Chat({ messages, onSendMessage, isLoading, onToggleSideb
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg overflow-hidden lg:hidden">
                <img 
-                src="/src/assets/images/vayu_logo_1779257820535.png" 
+                src="/logo.png" 
                 alt="Vayu Logo" 
                 className="w-full h-full object-cover"
               />
@@ -87,7 +87,7 @@ export default function Chat({ messages, onSendMessage, isLoading, onToggleSideb
             >
               <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/20 mb-8 p-1 bg-white/5 border border-white/10">
                  <img 
-                  src="/src/assets/images/vayu_logo_1779257820535.png" 
+                  src="/logo.png" 
                   alt="Vayu Logo" 
                   className="w-full h-full object-cover rounded-xl"
                 />
