@@ -1,0 +1,8 @@
+{
+  "name": "Vayu",
+  "description": "An advanced AI assistant powered by Puter.js, featuring web search, chat capabilities, and secure authentication in a sleek ChatGPT-inspired interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
