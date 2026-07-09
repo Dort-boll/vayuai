@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Sidebar from './components/Sidebar';
 import Chat from './components/Chat';
+import IntroPage from './components/IntroPage';
 import { Message, ChatThread } from './types';
 
 // Declare puter globally for TypeScript
@@ -22,6 +23,7 @@ export default function App() {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [showGuestApp, setShowGuestApp] = useState(false);
 
   // Initialize Threads from Local Storage
   useEffect(() => {
@@ -68,6 +70,7 @@ export default function App() {
     if (user) {
       await window.puter.auth.signOut();
       setUser(null);
+      setShowGuestApp(false);
     } else {
       try {
         await window.puter.auth.signIn();
@@ -190,6 +193,16 @@ export default function App() {
       setIsLoading(false);
     }
   };
+
+  if (!user && !showGuestApp) {
+    return (
+      <IntroPage
+        onAuth={handleAuth}
+        onContinueAsGuest={() => setShowGuestApp(true)}
+        isLoading={isLoading}
+      />
+    );
+  }
 
   return (
     <div className="flex h-screen bg-[#0d0d0d] font-sans selection:bg-blue-500/30 text-white overflow-hidden">
