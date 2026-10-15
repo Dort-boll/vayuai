@@ -1,233 +1,312 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import ReactMarkdown from 'react-markdown';
-import { ArrowUp, User, Bot, Loader2, Search, Zap, Menu } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
-import { Message } from '@/src/types';
+import {
+  Menu,
+  PanelLeft,
+  Share2,
+  Trash2,
+  ArrowDown,
+  Loader2,
+  SquarePen,
+  Sparkles,
+  Cpu,
+} from 'lucide-react';
+import MessageItem from './MessageItem';
+import FloatingComposer from './FloatingComposer';
+import ModelSelector from './ModelSelector';
+import { Message, AttachmentItem, ToolMode } from '../types';
 
 interface ChatProps {
   messages: Message[];
-  onSendMessage: (content: string, useWebSearch?: boolean) => void;
+  onSendMessage: (params: {
+    content: string;
+    toolMode: ToolMode;
+    attachments: AttachmentItem[];
+  }) => void;
   isLoading: boolean;
+  onStopGeneration?: () => void;
   onToggleSidebar: () => void;
   isSidebarOpen: boolean;
+  currentModel: string;
+  onSelectModel: (modelId: string) => void;
+  onClearChat?: () => void;
+  onNewChat?: () => void;
+  onRegenerateMessage?: (messageId: string) => void;
+  onEditPrompt?: (content: string) => void;
 }
 
-export default function Chat({ messages, onSendMessage, isLoading, onToggleSidebar, isSidebarOpen }: ChatProps) {
-  const [input, setInput] = useState('');
-  const [useWebSearch, setUseWebSearch] = useState(false);
+export default function Chat({
+  messages,
+  onSendMessage,
+  isLoading,
+  onStopGeneration,
+  onToggleSidebar,
+  isSidebarOpen,
+  currentModel,
+  onSelectModel,
+  onClearChat,
+  onNewChat,
+  onRegenerateMessage,
+  onEditPrompt,
+}: ChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = useCallback((smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: smooth ? 'smooth' : 'auto',
+    });
+  }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    scrollToBottom(true);
+  }, [messages, isLoading, scrollToBottom]);
 
-  const handleSubmit = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!input.trim() || isLoading) return;
-    onSendMessage(input, useWebSearch);
-    setInput('');
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const distanceToBottom = scrollHeight - scrollTop - clientHeight;
+    setShowScrollBottom(distanceToBottom > 160);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
+  const handleExportShare = () => {
+    if (messages.length === 0) return;
+    const formatted = messages
+      .map(
+        m =>
+          `**${m.role === 'user' ? 'User' : 'Vayu AI v6.1'}** (${new Date(
+            m.timestamp
+          ).toLocaleTimeString()}):\n${m.content}\n`
+      )
+      .join('\n---\n\n');
+
+    navigator.clipboard.writeText(formatted).then(() => {
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    });
   };
+
+  const suggestions = [
+    {
+      title: "Explain quantum computing in simple terms",
+      category: "Quantum Science",
+      tool: 'reasoning' as ToolMode,
+    },
+    {
+      title: "Write a high-performance concurrent queue in TypeScript",
+      category: "Code Architecture",
+      tool: 'chat' as ToolMode,
+    },
+    {
+      title: "Create a cyberpunk city floating over clouds with neon aurora",
+      category: "Vision Studio",
+      tool: 'image' as ToolMode,
+    },
+    {
+      title: "What are the latest breakthroughs in fusion energy research?",
+      category: "Live Web Search",
+      tool: 'search' as ToolMode,
+    },
+  ];
 
   return (
-    <div className="flex-1 flex flex-col relative h-screen bg-[#141414] overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center justify-between h-16 px-4 border-b border-white/5 bg-[#141414]/80 backdrop-blur-md sticky top-0 z-30">
-        <div className="flex items-center gap-3">
+    <div className="flex-1 flex flex-col relative h-screen bg-[#212121] overflow-hidden select-text text-[#ECECEC]">
+      
+      {/* ChatGPT-Style Sleek Top Navigation Bar */}
+      <header className="flex items-center justify-between h-14 px-4 bg-[#212121]/95 backdrop-blur-md sticky top-0 z-30 select-none">
+        <div className="flex items-center gap-2">
           {!isSidebarOpen && (
             <button
               onClick={onToggleSidebar}
-              className="p-2 hover:bg-white/5 rounded-lg text-zinc-400 transition-colors"
+              className="p-2 hover:bg-[#2b2b2b] rounded-lg text-[#b4b4b4] hover:text-white transition-colors cursor-pointer"
+              title="Open sidebar"
             >
-              <Menu size={20} />
+              <PanelLeft size={18} />
             </button>
           )}
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg overflow-hidden lg:hidden">
-               <img 
-                src="/logo.png" 
-                alt="Vayu Logo" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className="text-sm font-semibold text-zinc-100 tracking-tight">Vayu Assistant</span>
-          </div>
+
+          {/* Dedicated NVIDIA Model Indicator Pill */}
+          <ModelSelector
+            currentModel={currentModel}
+            onSelectModel={onSelectModel}
+          />
         </div>
-        <div className="flex items-center gap-3">
-           <div className={cn(
-             "px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] uppercase tracking-widest font-bold text-blue-400 flex items-center gap-1.5 shadow-sm shadow-blue-500/5",
-             isLoading && "animate-pulse"
-           )}>
-             <div className={cn("w-1.5 h-1.5 rounded-full bg-blue-400", isLoading && "animate-ping")} />
-             Vayu Engine
-           </div>
+
+        {/* Right Actions: New Chat, Share & Clear */}
+        <div className="flex items-center gap-1">
+          {onNewChat && (
+            <button
+              onClick={onNewChat}
+              className="p-2 hover:bg-[#2b2b2b] rounded-lg text-[#b4b4b4] hover:text-white transition-colors cursor-pointer"
+              title="New chat"
+            >
+              <SquarePen size={18} />
+            </button>
+          )}
+
+          {messages.length > 0 && (
+            <>
+              <button
+                onClick={handleExportShare}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#b4b4b4] hover:text-white hover:bg-[#2b2b2b] transition-colors cursor-pointer"
+                title="Copy conversation transcript"
+              >
+                <Share2 size={15} />
+                <span className="hidden sm:inline">
+                  {copiedShare ? 'Copied Transcript' : 'Share'}
+                </span>
+              </button>
+
+              {onClearChat && (
+                <button
+                  onClick={onClearChat}
+                  className="p-2 rounded-lg text-[#737373] hover:text-rose-400 hover:bg-[#2b2b2b] transition-colors cursor-pointer"
+                  title="Clear chat"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </>
+          )}
         </div>
       </header>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-8 space-y-8 custom-scrollbar">
-        <div className="max-w-3xl mx-auto space-y-8">
+      {/* Conversation Canvas */}
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 pt-2 pb-36 custom-scrollbar"
+      >
+        <div className="max-w-3xl mx-auto space-y-5">
           {messages.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+            /* ChatGPT-Style Welcome Screen */
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="flex flex-col items-center justify-center min-h-[60vh] text-center"
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="flex flex-col items-center justify-center min-h-[62vh] text-center pt-10 pb-8"
             >
-              <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/20 mb-8 p-1 bg-white/5 border border-white/10">
-                 <img 
-                  src="/logo.png" 
-                  alt="Vayu Logo" 
-                  className="w-full h-full object-cover rounded-xl"
-                />
+              <div className="relative mb-5">
+                <div className="w-16 h-16 rounded-2xl p-1 bg-gradient-to-tr from-emerald-500/20 via-[#262626] to-cyan-500/20 border border-[#383838] shadow-[0_0_40px_rgba(16,185,129,0.15)] flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/logo.png"
+                    alt="Vayu Logo"
+                    className="w-full h-full object-cover rounded-xl"
+                    onError={e => {
+                      (e.target as HTMLImageElement).src =
+                        'https://api.dicebear.com/7.x/bottts/svg?seed=vayu';
+                    }}
+                  />
+                </div>
               </div>
-              <h2 className="text-4xl font-bold text-white tracking-tight mb-3">How can Vayu help you?</h2>
-              <p className="text-zinc-500 max-w-md text-lg">Your personal AI assistant for chatting, searching, and getting things done.</p>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-12 w-full max-w-xl">
-                 {[
-                   "Explain quantum physics",
-                   "Write a poem about the moon",
-                   "Search for latest tech news",
-                   "How to make pasta carbonara"
-                 ].map((suggestion, idx) => (
-                   <button 
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-3 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                <Cpu size={12} />
+                <span>Vayu AI v6.1 • 100% Pure Frontend</span>
+              </div>
+
+              <h2 className="text-3xl font-bold text-white tracking-tight mb-2">
+                What can I help with today?
+              </h2>
+              <div className="flex items-center gap-2 text-xs text-[#a3a3a3] max-w-md mx-auto">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Vayu AI Omni-Reasoning Engine v6.1</span>
+              </div>
+
+              {/* ChatGPT Style Curated Prompt Starters */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-10 w-full max-w-xl text-left">
+                {suggestions.map((s, idx) => (
+                  <button
                     key={idx}
                     onClick={() => {
-                      setInput(suggestion);
-                      onSendMessage(suggestion, suggestion.toLowerCase().includes('search'));
+                      onSendMessage({
+                        content: s.title,
+                        toolMode: s.tool,
+                        attachments: [],
+                      });
                     }}
-                    className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-left text-sm text-zinc-300"
-                   >
-                     {suggestion}
-                   </button>
-                 ))}
+                    className="p-3.5 rounded-2xl bg-[#262626] hover:bg-[#2e2e2e] border border-[#383838] hover:border-[#4d4d4d] transition-all group cursor-pointer shadow-sm text-left flex flex-col justify-between"
+                  >
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400/90 mb-1">
+                      {s.category}
+                    </div>
+                    <div className="text-[13px] font-medium text-[#ECECEC] group-hover:text-white leading-snug">
+                      {s.title}
+                    </div>
+                  </button>
+                ))}
               </div>
             </motion.div>
           ) : (
+            /* Render Messages with ChatGPT Style Typography */
             <>
-              {messages.map((message, idx) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  className={cn(
-                    "flex gap-4 md:gap-6",
-                    message.role === 'user' ? "justify-end" : "justify-start"
-                  )}
-                >
-                  <div className={cn(
-                    "flex max-w-[85%] md:max-w-3xl gap-3 md:gap-4",
-                    message.role === 'user' && "flex-row-reverse"
-                  )}>
-                    <div className={cn(
-                      "w-8 h-8 rounded-lg shrink-0 flex items-center justify-center border",
-                      message.role === 'user' 
-                        ? "bg-zinc-800 border-white/10" 
-                        : "bg-blue-600 border-blue-500 shadow-sm"
-                    )}>
-                      {message.role === 'user' ? <User size={16} className="text-zinc-400" /> : <Bot size={18} className="text-white" />}
-                    </div>
-                    <div className={cn(
-                      "prose prose-invert max-w-none pt-1 leading-relaxed",
-                      message.role === 'user' ? "text-zinc-100" : "text-zinc-300"
-                    )}>
-                      <ReactMarkdown 
-                        components={{
-                          p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
-                          code: ({ children }) => <code className="bg-white/10 px-1 py-0.5 rounded text-indigo-400 font-mono text-sm">{children}</code>,
-                          pre: ({ children }) => <pre className="bg-zinc-900/50 p-4 rounded-xl border border-white/10 overflow-x-auto my-4">{children}</pre>
-                        }}
-                      >
-                        {message.content}
-                      </ReactMarkdown>
-                    </div>
-                  </div>
-                </motion.div>
+              {messages.map(msg => (
+                <MessageItem
+                  key={msg.id}
+                  message={msg}
+                  onRegenerate={onRegenerateMessage}
+                  onEditPrompt={onEditPrompt}
+                />
               ))}
+
+              {/* Streaming / Loading Indicator in ChatGPT Style */}
               {isLoading && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex gap-4 md:gap-6"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="w-full py-3 flex justify-start"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
-                    <Bot size={18} className="text-white" />
-                  </div>
-                  <div className="flex items-center gap-2 pt-2">
-                    <Loader2 size={18} className="animate-spin text-blue-500" />
-                    <span className="text-zinc-500 text-sm">Vayu is thinking...</span>
+                  <div className="flex gap-4 max-w-3xl w-full">
+                    <div className="w-8 h-8 rounded-full bg-[#262626] border border-[#383838] overflow-hidden shrink-0 flex items-center justify-center p-0.5 shadow-sm mt-0.5">
+                      <img
+                        src="/logo.png"
+                        alt="Vayu"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2.5 pt-1.5 text-xs text-[#a3a3a3]">
+                      <Loader2 size={16} className="animate-spin text-emerald-400" />
+                      <span className="font-medium animate-pulse text-[#b4b4b4]">
+                        Vayu AI is thinking...
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               )}
             </>
           )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 bg-gradient-to-t from-[#141414] via-[#141414] to-transparent">
-        <form 
-          onSubmit={handleSubmit}
-          className="max-w-3xl mx-auto relative group"
-        >
-          <div className="flex flex-col bg-[#212121] border border-white/10 rounded-2xl shadow-2xl focus-within:border-blue-600/50 focus-within:ring-1 focus-within:ring-blue-600/50 transition-all overflow-hidden">
-            <textarea
-              rows={1}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask Vayu anything..."
-              className="w-full bg-transparent p-4 text-white resize-none outline-none min-h-[56px] max-h-[200px] leading-relaxed custom-scrollbar"
-              disabled={isLoading}
-            />
-            <div className="flex items-center justify-between px-3 py-2 border-t border-white/5 bg-zinc-900/30">
-               <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setUseWebSearch(!useWebSearch)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
-                      useWebSearch 
-                        ? "bg-blue-600/20 border-blue-600/50 text-blue-400" 
-                        : "bg-white/5 border-white/10 text-zinc-500 hover:text-zinc-300 hover:bg-white/10"
-                    )}
-                  >
-                    <Search size={14} />
-                    Search Web
-                  </button>
-               </div>
-               <button
-                type="submit"
-                disabled={!input.trim() || isLoading}
-                className={cn(
-                  "p-2 rounded-xl transition-all flex items-center justify-center",
-                  input.trim() && !isLoading 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20 hover:scale-105 active:scale-95" 
-                    : "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                )}
-              >
-                <ArrowUp size={20} />
-              </button>
-            </div>
-          </div>
-          <p className="text-[10px] text-center text-zinc-600 mt-3 uppercase tracking-tighter">
-            Vayu AI Assistant • Intelligence without limits
-          </p>
-        </form>
+      {/* Jump To Bottom Floating Button */}
+      <AnimatePresence>
+        {showScrollBottom && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => scrollToBottom(true)}
+            className="absolute bottom-28 right-6 z-20 w-9 h-9 rounded-full bg-[#2e2e2e] border border-[#404040] text-white shadow-xl flex items-center justify-center hover:bg-[#383838] transition-colors cursor-pointer"
+            title="Scroll to latest"
+          >
+            <ArrowDown size={16} />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Anchored ChatGPT-Style Message Composer Container */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none bg-gradient-to-t from-[#212121] via-[#212121]/95 to-transparent pt-6">
+        <div className="pointer-events-auto">
+          <FloatingComposer
+            onSendMessage={onSendMessage}
+            isLoading={isLoading}
+            onStopGeneration={onStopGeneration}
+          />
+        </div>
       </div>
     </div>
   );

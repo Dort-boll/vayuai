@@ -3,12 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vayu | AI Assistant</title>
-    <script src="https://js.puter.com/v2/"></script>
+    <title>Vayu AI v6.1</title>
+    <meta name="description" content="Vayu AI v6.1 - A cutting-edge pure frontend conversational AI assistant with profound cognitive reasoning and analytical synthesis." />
+    <meta property="og:title" content="Vayu AI v6.1" />
+    <meta property="og:description" content="Vayu AI v6.1 - A cutting-edge pure frontend conversational AI assistant with profound cognitive reasoning and analytical synthesis." />
+    <link rel="icon" type="image/png" href="/logo.png" />
+    <script>
+      // Defensively guard customElements.define against duplicate registration errors in HMR and bundled modules
+      if (typeof window !== 'undefined' && window.customElements) {
+        const originalDefine = window.customElements.define.bind(window.customElements);
+        window.customElements.define = function(name, constructor, options) {
+          if (!window.customElements.get(name)) {
+            try {
+              originalDefine(name, constructor, options);
+            } catch (err) {
+              console.warn('[CustomElements] Duplicate custom element suppressed:', name);
+            }
+          }
+        };
+      }
+    </script>
   </head>
-  <body>
+  <body class="bg-[#0e0e0e] text-[#ececec] antialiased selection:bg-blue-600/30 selection:text-blue-200">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

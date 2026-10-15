@@ -1,45 +1,147 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  --bg-main: #171717;
+  --bg-sidebar: #121212;
+  --bg-elevated: #202020;
+  --bg-composer: #242424;
+  --bg-hover: #2B2B2B;
+  --border-subtle: #353535;
+  --text-primary: #F5F5F5;
+  --text-secondary: #A3A3A3;
+  --text-muted: #737373;
 }
 
 @layer base {
   body {
-    @apply bg-[#0d0d0d] text-zinc-100 antialiased;
+    background-color: #171717;
+    color: #F5F5F5;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
+    height: 5px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 9999px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
   }
 }
 
-/* Prose overrides for better dark mode readability */
-.prose {
-  @apply text-zinc-300;
+/* Custom Markdown Prose for ChatGPT-like readability */
+.chat-prose {
+  color: #d4d4d8;
+  font-size: 0.965rem;
+  line-height: 1.72;
 }
-.prose h1, .prose h2, .prose h3, .prose h4 {
-  @apply text-white font-bold tracking-tight mt-6 mb-4;
+
+.chat-prose p {
+  margin-bottom: 0.95rem;
 }
-.prose p {
-  @apply mb-4 last:mb-0 leading-relaxed;
+
+.chat-prose p:last-child {
+  margin-bottom: 0;
 }
-.prose a {
-  @apply text-blue-400 no-underline hover:underline;
+
+.chat-prose h1, .chat-prose h2, .chat-prose h3, .chat-prose h4 {
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 1.4rem;
+  margin-bottom: 0.6rem;
 }
-.prose ul, .prose ol {
-  @apply my-4 ml-6;
+
+.chat-prose h1 { font-size: 1.45rem; }
+.chat-prose h2 { font-size: 1.25rem; }
+.chat-prose h3 { font-size: 1.1rem; }
+
+.chat-prose ul {
+  list-style-type: disc;
+  margin-left: 1.4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.95rem;
 }
-.prose li {
-  @apply mb-2;
+
+.chat-prose ol {
+  list-style-type: decimal;
+  margin-left: 1.4rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.95rem;
+}
+
+.chat-prose li {
+  margin-bottom: 0.35rem;
+}
+
+.chat-prose blockquote {
+  border-left: 3px solid #353535;
+  padding-left: 1rem;
+  color: #a1a1aa;
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.chat-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.chat-prose th, .chat-prose td {
+  border: 1px solid #353535;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.chat-prose th {
+  background-color: #202020;
+  color: #f4f4f5;
+  font-weight: 600;
+}
+
+.chat-prose td {
+  background-color: rgba(36, 36, 36, 0.4);
+}
+
+.chat-prose strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.chat-prose a {
+  color: #38bdf8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.chat-prose a:hover {
+  color: #7dd3fc;
+}
+
+.chat-prose code:not(pre code) {
+  background: #242424;
+  border: 1px solid #353535;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.375rem;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: #e4e4e7;
 }
