@@ -14,6 +14,7 @@ import {
   Radio, 
   ServerOff 
 } from 'lucide-react';
+import claudeHeroImage from '../assets/images/claude_style_hero_1792046089712.jpg';
 
 interface IntroPageProps {
   onAuth: () => void;
@@ -25,6 +26,7 @@ export default function IntroPage({ onAuth, onContinueAsGuest, isLoading }: Intr
   const [isTechModalOpen, setIsTechModalOpen] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [isImageHovered, setIsImageHovered] = useState(false);
+  const [heroSrc, setHeroSrc] = useState<string>(claudeHeroImage || '/claude_style_hero.jpg');
 
   // Close modal on Escape
   useEffect(() => {
@@ -219,9 +221,15 @@ export default function IntroPage({ onAuth, onContinueAsGuest, isLoading }: Intr
                 {/* Image Container with Elegant Ratio & Framing */}
                 <div className="relative w-full aspect-square rounded-[22px] sm:rounded-[28px] overflow-hidden bg-[#100F0D] border border-[#2E2B24] group">
                   <img
-                    src="/src/assets/images/claude_style_hero_1792046089712.jpg"
-                    alt="Claude style geometric celestial sculpture with warm terracotta and sunburst facets"
-                    referrerPolicy="no-referrer"
+                    src={heroSrc}
+                    alt="Vayu AI Neural Architecture Matrix - Geometric Celestial Sculpture"
+                    loading="eager"
+                    decoding="async"
+                    onError={() => {
+                      if (heroSrc !== '/claude_style_hero.jpg') {
+                        setHeroSrc('/claude_style_hero.jpg');
+                      }
+                    }}
                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
                   />
 
